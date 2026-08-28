@@ -1,0 +1,45 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.planguys.ribbon'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.planguys.ribbon'
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName 'RC1'
+    }
+
+    buildTypes {
+        debug {
+            applicationIdSuffix ''
+            versionNameSuffix ''
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+tasks.register('syncRibbonWebAssets', Sync) {
+    into layout.projectDirectory.dir('src/main/assets')
+    from(rootProject.projectDir) {
+        include 'index.html'
+        include '*.js'
+        include 'README.md'
+        include 'RBN_SPEC.md'
+    }
+    from(rootProject.file('artwork')) {
+        into 'artwork'
+    }
+}
+
+tasks.named('preBuild').configure {
+    dependsOn tasks.named('syncRibbonWebAssets')
+}
