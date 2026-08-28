@@ -1,4 +1,4 @@
-name: Build Ribbon RC1
+name: Build Ribbon RC1 Android
 
 on:
   push:
@@ -9,13 +9,13 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  android:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate JavaScript
+      - name: Validate Ribbon JavaScript
         shell: bash
         run: |
           set -euo pipefail
@@ -23,25 +23,44 @@ jobs:
             node --check "$f"
           done
 
-      - name: Assemble Ribbon RC1
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android 35 SDK
+        shell: bash
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Set up Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build Ribbon RC1 APK
+        run: gradle --no-daemon --stacktrace :app:assembleDebug
+
+      - name: Prepare APK artifact
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf dist
-          mkdir -p dist/Ribbon-RC1/artwork
-          cp index.html dist/Ribbon-RC1/
-          cp ./*.js dist/Ribbon-RC1/
-          cp README.md RBN_SPEC.md dist/Ribbon-RC1/
-          if [ -f artwork/dimensions.example.json ]; then
-            cp artwork/dimensions.example.json dist/Ribbon-RC1/artwork/
-          fi
-          printf 'Ribbon RC1\nCommit: %s\nBuilt: %s\n' "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > dist/Ribbon-RC1/BUILD.txt
-          (cd dist && zip -qr Ribbon-RC1.zip Ribbon-RC1)
+          mkdir -p dist
+          cp app/build/outputs/apk/debug/app-debug.apk dist/Ribbon-RC1.apk
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose dist/Ribbon-RC1.apk
+          sha256sum dist/Ribbon-RC1.apk | tee dist/Ribbon-RC1.apk.sha256
 
-      - name: Upload Ribbon RC1 artifact
+      - name: Upload Ribbon RC1 APK
         uses: actions/upload-artifact@v4
         with:
-          name: Ribbon-RC1
-          path: dist/Ribbon-RC1.zip
+          name: Ribbon-RC1-APK
+          path: |
+            dist/Ribbon-RC1.apk
+            dist/Ribbon-RC1.apk.sha256
           if-no-files-found: error
           retention-days: 30
