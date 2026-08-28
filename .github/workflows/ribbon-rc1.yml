@@ -1,0 +1,47 @@
+name: Build Ribbon RC1
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate JavaScript
+        shell: bash
+        run: |
+          set -euo pipefail
+          for f in *.js; do
+            node --check "$f"
+          done
+
+      - name: Assemble Ribbon RC1
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf dist
+          mkdir -p dist/Ribbon-RC1/artwork
+          cp index.html dist/Ribbon-RC1/
+          cp ./*.js dist/Ribbon-RC1/
+          cp README.md RBN_SPEC.md dist/Ribbon-RC1/
+          if [ -f artwork/dimensions.example.json ]; then
+            cp artwork/dimensions.example.json dist/Ribbon-RC1/artwork/
+          fi
+          printf 'Ribbon RC1\nCommit: %s\nBuilt: %s\n' "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > dist/Ribbon-RC1/BUILD.txt
+          (cd dist && zip -qr Ribbon-RC1.zip Ribbon-RC1)
+
+      - name: Upload Ribbon RC1 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ribbon-RC1
+          path: dist/Ribbon-RC1.zip
+          if-no-files-found: error
+          retention-days: 30
