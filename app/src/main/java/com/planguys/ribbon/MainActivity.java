@@ -72,9 +72,7 @@ public class MainActivity extends Activity {
             }
         });
 
-        if (BuildConfig.DEBUG) {
-            WebView.setWebContentsDebuggingEnabled(true);
-        }
+        WebView.setWebContentsDebuggingEnabled(true);
 
         if (savedInstanceState == null) {
             webView.loadUrl("file:///android_asset/index.html");
