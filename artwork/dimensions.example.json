@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "all": {
+    "width": 470,
+    "height": 872,
+    "fit": "cover",
+    "blurCroppedArea": true,
+    "blurRadius": 28,
+    "positionX": 0.5,
+    "positionY": 0.5,
+    "rotation": 0,
+    "flipX": false,
+    "flipY": false
+  },
+  "artworks": {
+    "0002.webp": {
+      "fit": "contain",
+      "blurCroppedArea": false,
+      "positionY": 0.35
+    }
+  }
+}
